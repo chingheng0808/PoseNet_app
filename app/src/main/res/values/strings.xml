@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">PoseNet Testing Demo For MAGIC Lab Scene</string>
+    <string name="icon">magiclab icon here</string>
+    <string name="trajectory">Trajectory</string>
+    <string name="action_unBindCamX">unBindCamX</string>
+    <string name="action_bindCamX">bindCamX</string>
+    <string name="action_photoMode">photoMode</string>
+</resources>
