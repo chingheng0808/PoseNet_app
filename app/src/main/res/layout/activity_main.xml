@@ -22,9 +22,11 @@
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:src="@drawable/full_4440"
+        android:layout_height="wrap_content"
+        android:src="@drawable/choosephoto"
         android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.Toolbar
@@ -246,26 +248,63 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="RPBT_p60"
+                    android:text="PBT_p60"
+                    android:textSize="12sp" />
+            </RadioGroup>
+            <RadioGroup
+                android:id="@+id/radioGroup2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <RadioButton
+                    android:id="@+id/radioButton1_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="N_f32"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/radioButton2_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="N_i8"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/radioButton3_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="N_p75"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/radioButton4_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="PBT_f32"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/radioButton5_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="PBT_i8"
+                    android:textSize="12sp" />
+
+                <RadioButton
+                    android:id="@+id/radioButton6_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="PBT_p60"
                     android:textSize="12sp" />
             </RadioGroup>
 
-            <TextView
-                android:layout_width="185dp"
-                android:layout_height="match_parent"
-                android:text="Enable Quantized Model"
-                android:textColor="@android:color/black"
-                android:textSize="16sp"
-                android:visibility="gone" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/enable_quantizedmodel_toggle"
-                android:layout_width="200dp"
-                android:layout_height="match_parent"
-                android:checked="false"
-                android:gravity="right"
-                android:visibility="gone"
-                tools:ignore="TouchTargetSizeCheck" />
         </LinearLayout>
 
     </LinearLayout>

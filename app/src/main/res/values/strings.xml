@@ -5,4 +5,5 @@
     <string name="action_unBindCamX">unBindCamX</string>
     <string name="action_bindCamX">bindCamX</string>
     <string name="action_photoMode">photoMode</string>
+    <string name="action_endPhotoMode">backToCam</string>
 </resources>

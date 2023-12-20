@@ -15,4 +15,8 @@
         android:id="@+id/photoMode"
         android:title="@string/action_photoMode"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/endPhotoMode"
+        android:title="@string/action_endPhotoMode"
+        app:showAsAction="never"/>
 </menu>

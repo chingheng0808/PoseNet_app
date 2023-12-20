@@ -1,6 +1,7 @@
 package com.example.posenet_henry
 
 import ai.onnxruntime.*
+import ai.onnxruntime.extensions.OrtxPackage
 import com.example.posenet_henry.databinding.ActivityMainBinding
 import android.Manifest
 import android.content.pm.PackageManager
@@ -28,6 +29,16 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.RadioGroup
 import androidx.camera.view.PreviewView
+import java.io.InputStream
+import android.content.Intent
+import android.provider.MediaStore
+import androidx.activity.result.contract.ActivityResultContracts
+import android.app.Activity
+import android.content.ContentResolver
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
+import android.widget.RadioButton
 
 class MainActivity : AppCompatActivity() {
     private val screenLayout by lazy{
@@ -38,9 +49,6 @@ class MainActivity : AppCompatActivity() {
     }
     private val mapView by lazy{
         findViewById<ImageView>(R.id.mapView)
-    }
-    private val radioGroup by lazy{
-        findViewById<RadioGroup>(R.id.radioGroup)
     }
     lateinit var mainHandler: Handler
     lateinit var myDraw: CanvasCl
@@ -59,13 +67,40 @@ class MainActivity : AppCompatActivity() {
     private var ortEnv: OrtEnvironment? = null
     private var imageCapture: ImageCapture? = null
     private var imageAnalysis: ImageAnalysis? = null
-    //    private var enableQuantizedModel: Boolean = false
     private var modelSelectID: Int = R.id.radioButton1
+    private var modelSelectID_ph: Int = R.id.radioButton1
 
     private val translation = floatArrayOf(3.5f, 2.0f)
     private val modelDict = mapOf(R.id.radioButton1 to R.raw.magiclab_1115_infer, R.id.radioButton2 to R.raw.magiclab_1115_int8, R.id.radioButton3 to R.raw.magiclab_1115_pruned_basic_sp75_ft
         , R.id.radioButton4 to R.raw.magiclab_1115_2_infer, R.id.radioButton5 to R.raw.magiclab_1115_2_int8, R.id.radioButton6 to R.raw.magiclab_1115_2_pruned_basic_sp60_ft)
+    private val modelDict_ph = mapOf(R.id.radioButton1_2 to R.raw.magiclab_1115_infer, R.id.radioButton2_2 to R.raw.magiclab_1115_int8, R.id.radioButton3_2 to R.raw.magiclab_1115_pruned_basic_sp75_ft
+        , R.id.radioButton4_2 to R.raw.magiclab_1115_2_infer, R.id.radioButton5_2 to R.raw.magiclab_1115_2_int8, R.id.radioButton6_2 to R.raw.magiclab_1115_2_pruned_basic_sp60_ft)
 
+    private lateinit var ortSession: OrtSession
+    private lateinit var sessionOptions: OrtSession.SessionOptions
+    private var inputImage: ImageView? = null
+    private var imgStream: InputStream? = null
+    private var ortEnv2: OrtEnvironment = OrtEnvironment.getEnvironment()
+    // read and load photo and predict
+    private val pickImage = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val selectedImageUri = result.data?.data
+            if (selectedImageUri != null) {
+                imgStream = getInputStreamFromUri(baseContext, selectedImageUri)
+            }
+            inputImage?.setImageURI(selectedImageUri)
+            ortSession = ortEnv2.createSession(readModelSImg(), sessionOptions)
+            try {
+                predictSingleImg(ortSession)
+                Toast.makeText(baseContext, "Pose prediction success!", Toast.LENGTH_SHORT)
+                    .show()
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception caught when predicting pose", e)
+                Toast.makeText(baseContext, "Failed to predict pose", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -86,6 +121,9 @@ class MainActivity : AppCompatActivity() {
         binding.radioGroup.setOnCheckedChangeListener { _, id ->
             modelSelectID = id
             setORTAnalyzer()
+        }
+        (findViewById<RadioGroup>(R.id.radioGroup2)).setOnCheckedChangeListener { _, id ->
+            modelSelectID_ph = id
         }
 
         // Drawing part
@@ -111,6 +149,19 @@ class MainActivity : AppCompatActivity() {
 //                })
             }
         }
+
+        /// Predict Input Single Image Part
+        inputImage = findViewById(R.id.imageView)
+        sessionOptions= OrtSession.SessionOptions()
+        sessionOptions.registerCustomOpLibrary(OrtxPackage.getLibraryPath())
+
+        inputImage?.setOnClickListener {
+            openGallery()
+        }
+    }
+    private fun openGallery() {
+        val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        pickImage.launch(galleryIntent)
     }
 
     private fun startCamera() {
@@ -191,7 +242,7 @@ class MainActivity : AppCompatActivity() {
             binding.estimatedOrientationValue.text = "%.3f, %.3f, %.3f".format(result.orientation[0],result.orientation[1],result.orientation[2])
 
             binding.inferenceTimeValue.text = result.processTimeMs.toString() + "ms"
-            binding.percentMeter.progress = (100* result.processTimeMs / 500).toInt()
+            binding.percentMeter.progress = (100* result.processTimeMs / 1000).toInt()
 
             if(binding.checkBoxMap.isChecked)
                 updatePoint(result.position, true)
@@ -273,10 +324,42 @@ class MainActivity : AppCompatActivity() {
             R.id.photoMode ->{
                 findViewById<PreviewView>(R.id.viewFinder).visibility = GONE
                 findViewById<View>(R.id.imageView).visibility = VISIBLE
-
+                mCameraProvider?.unbindAll()
+                findViewById<RadioGroup>(R.id.radioGroup2).visibility = VISIBLE
+                findViewById<RadioGroup>(R.id.radioGroup).visibility = GONE
+                return true
+            }
+            R.id.endPhotoMode ->{
+                findViewById<PreviewView>(R.id.viewFinder).visibility = VISIBLE
+                findViewById<View>(R.id.imageView).visibility = GONE
+                mCameraProvider?.bindToLifecycle(this, mCameraSelector, mPreview, imageCapture, imageAnalysis)
+                findViewById<RadioGroup>(R.id.radioGroup2).visibility = GONE
+                findViewById<RadioGroup>(R.id.radioGroup).visibility = VISIBLE
                 return true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun readModelSImg(): ByteArray {
+        var modelID = modelDict_ph[modelSelectID_ph]
+        if(modelID == null){
+            modelID = R.raw.magiclab_1115
+        }
+        return resources.openRawResource(modelID).readBytes()
+    }
+    private fun predictSingleImg(ortSession: OrtSession) {
+        var superResPerformer = SuperResPerformer()
+        if (imgStream != null){
+            var result =
+                ortEnv?.let { superResPerformer.upscale(imgStream!!, it, ortSession) }
+            if (result != null) {
+                updateUI(result)
+            }
+        }
+    }
+    fun getInputStreamFromUri(context: Context, uri: Uri): InputStream? {
+        val contentResolver: ContentResolver = context.contentResolver
+        return contentResolver.openInputStream(uri)
     }
 }
