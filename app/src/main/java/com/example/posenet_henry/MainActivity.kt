@@ -55,6 +55,8 @@ class MainActivity : AppCompatActivity() {
     // locX, locY is at the local coordinate
     private var locX = 0f
     private var locY = 0f
+    private val WIDTH_CONST = 910
+    private val HEIGHT_CONST = 567
 
     private lateinit var binding: ActivityMainBinding
 
@@ -286,6 +288,7 @@ class MainActivity : AppCompatActivity() {
         val location = adjustPosition(positionRes[0], positionRes[1])
         locX = location[0]
         locY = location[1]
+        Toast.makeText(baseContext,"%.3f, %.3f".format(location[0], location[1]),Toast.LENGTH_SHORT).show()
 //        System.out.println(positionRes[0])
         // Update Canvas View
         myDraw.clearPoint()
@@ -363,6 +366,6 @@ class MainActivity : AppCompatActivity() {
         val yo = 400f
         val xr = -1f*100f*7f/8f
         val yr = -1f*100f*7f/8f
-        return floatArrayOf(x*xr + xo, y*yr + yo)
+        return floatArrayOf((x*xr + xo)*mapView.layoutParams.width/WIDTH_CONST, (y*yr + yo)*mapView.layoutParams.height/HEIGHT_CONST)
     }
 }

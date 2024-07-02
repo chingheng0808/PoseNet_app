@@ -101,7 +101,7 @@ class CanvasCl(context: Context, sl: Int, st: Int, w: Int, h: Int) : View(contex
     }
 
 
-    private fun drawTrajectory(x: Float, y: Float) {
+    private fun drawTrajectory(pointsRecord: FloatArray) {
         if (pointsRecord.count() > 4)
             for (i in 0..pointsRecord.count() - 3 step 2)
                 extraCanvas.drawLine(pointsRecord[i], pointsRecord[i + 1], pointsRecord[i + 2], pointsRecord[i + 3], linePaint)
@@ -116,7 +116,7 @@ class CanvasCl(context: Context, sl: Int, st: Int, w: Int, h: Int) : View(contex
         pointsRecord = addElement(pointsRecord, y)
 
         if(isTrajectory)
-            drawTrajectory(x, y)
+            drawTrajectory(pointsRecord)
     }
 
     fun clearPoint() {
