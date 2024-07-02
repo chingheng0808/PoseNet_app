@@ -5,10 +5,10 @@ import java.nio.FloatBuffer
 
 const val DIM_BATCH_SIZE = 1;
 const val DIM_PIXEL_SIZE = 3;
-const val IMAGE_SIZE_X = 256;
-const val IMAGE_SIZE_Y = 256;
-val MEAN = floatArrayOf(0.5543f, 0.5372f, 0.5282f)
-val STD = floatArrayOf(0.2555f, 0.2539f, 0.2427f)
+const val IMAGE_SIZE_X = 384;
+const val IMAGE_SIZE_Y = 1920*384/1080;
+val MEAN = floatArrayOf(0.5128f, 0.4938f, 0.4747f)
+val STD = floatArrayOf(0.2537f, 0.2484f, 0.2360f)
 
 
 fun preProcess(bitmap: Bitmap): FloatBuffer {

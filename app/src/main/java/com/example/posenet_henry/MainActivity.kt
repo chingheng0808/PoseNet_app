@@ -1,7 +1,7 @@
 package com.example.posenet_henry
 
 import ai.onnxruntime.*
-import ai.onnxruntime.extensions.OrtxPackage
+//import ai.onnxruntime.extensions.OrtxPackage
 import com.example.posenet_henry.databinding.ActivityMainBinding
 import android.Manifest
 import android.content.pm.PackageManager
@@ -53,8 +53,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var mainHandler: Handler
     lateinit var myDraw: CanvasCl
     // locX, locY is at the local coordinate
-    private var locX = 20f
-    private var locY = 20f
+    private var locX = 0f
+    private var locY = 0f
 
     private lateinit var binding: ActivityMainBinding
 
@@ -70,11 +70,8 @@ class MainActivity : AppCompatActivity() {
     private var modelSelectID: Int = R.id.radioButton1
     private var modelSelectID_ph: Int = R.id.radioButton1
 
-    private val translation = floatArrayOf(3.5f, 2.0f)
-    private val modelDict = mapOf(R.id.radioButton1 to R.raw.magiclab_1115_infer, R.id.radioButton2 to R.raw.magiclab_1115_int8, R.id.radioButton3 to R.raw.magiclab_1115_pruned_basic_sp75_ft
-        , R.id.radioButton4 to R.raw.magiclab_1115_2_infer, R.id.radioButton5 to R.raw.magiclab_1115_2_int8, R.id.radioButton6 to R.raw.magiclab_1115_2_pruned_basic_sp60_ft)
-    private val modelDict_ph = mapOf(R.id.radioButton1_2 to R.raw.magiclab_1115_infer, R.id.radioButton2_2 to R.raw.magiclab_1115_int8, R.id.radioButton3_2 to R.raw.magiclab_1115_pruned_basic_sp75_ft
-        , R.id.radioButton4_2 to R.raw.magiclab_1115_2_infer, R.id.radioButton5_2 to R.raw.magiclab_1115_2_int8, R.id.radioButton6_2 to R.raw.magiclab_1115_2_pruned_basic_sp60_ft)
+    private val modelDict = mapOf(R.id.radioButton1 to R.raw.baseline_magiclab, R.id.radioButton2 to R.raw.magiclab_1115_int8,)
+    private val modelDict_ph = mapOf(R.id.radioButton1_2 to R.raw.baseline_magiclab, R.id.radioButton2_2 to R.raw.magiclab_1115_int8,)
 
     private lateinit var ortSession: OrtSession
     private lateinit var sessionOptions: OrtSession.SessionOptions
@@ -153,7 +150,7 @@ class MainActivity : AppCompatActivity() {
         /// Predict Input Single Image Part
         inputImage = findViewById(R.id.imageView)
         sessionOptions= OrtSession.SessionOptions()
-        sessionOptions.registerCustomOpLibrary(OrtxPackage.getLibraryPath())
+//        sessionOptions.registerCustomOpLibrary(OrtxPackage.getLibraryPath())
 
         inputImage?.setOnClickListener {
             openGallery()
@@ -177,7 +174,6 @@ class MainActivity : AppCompatActivity() {
                 .also {
                     it.setSurfaceProvider(binding.viewFinder.surfaceProvider)
                 }
-
 
             imageCapture = ImageCapture.Builder()
                 .build()
@@ -255,7 +251,7 @@ class MainActivity : AppCompatActivity() {
     private suspend fun readModel(): ByteArray = withContext(Dispatchers.IO) {
         var modelID = modelDict[modelSelectID]
         if(modelID == null){
-            modelID = R.raw.magiclab_1115
+            modelID = R.raw.baseline_magiclab
         }
 
         resources.openRawResource(modelID).readBytes()
@@ -279,7 +275,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val TAG = "ORTImageClassifier"
+        const val TAG = "MAGICLab_PoseNet"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
     }
@@ -287,10 +283,9 @@ class MainActivity : AppCompatActivity() {
     private fun updatePoint(positionRes: FloatArray, isTrajectory: Boolean){
         //Test
         // Scalar = pictureSize/realWoldSize
-        val scalarX = 910.0f/7.0f
-        val scalarY = 567.0f/4.0f
-        locX = -(positionRes[0]-translation[0])*scalarX
-        locY = -(positionRes[2]-translation[1])*scalarY
+        val location = adjustPosition(positionRes[0], positionRes[1])
+        locX = location[0]
+        locY = location[1]
 //        System.out.println(positionRes[0])
         // Update Canvas View
         myDraw.clearPoint()
@@ -344,15 +339,15 @@ class MainActivity : AppCompatActivity() {
     private fun readModelSImg(): ByteArray {
         var modelID = modelDict_ph[modelSelectID_ph]
         if(modelID == null){
-            modelID = R.raw.magiclab_1115
+            modelID = R.raw.baseline_magiclab
         }
         return resources.openRawResource(modelID).readBytes()
     }
     private fun predictSingleImg(ortSession: OrtSession) {
-        var superResPerformer = SuperResPerformer()
+        var posePrediction = PosePrediction()
         if (imgStream != null){
             var result =
-                ortEnv?.let { superResPerformer.upscale(imgStream!!, it, ortSession) }
+                ortEnv?.let { posePrediction.upscale(imgStream!!, it, ortSession) }
             if (result != null) {
                 updateUI(result)
             }
@@ -361,5 +356,13 @@ class MainActivity : AppCompatActivity() {
     fun getInputStreamFromUri(context: Context, uri: Uri): InputStream? {
         val contentResolver: ContentResolver = context.contentResolver
         return contentResolver.openInputStream(uri)
+    }
+
+    private fun adjustPosition(x: Float, y: Float): FloatArray{
+        val xo = 800f
+        val yo = 400f
+        val xr = -1f*100f*7f/8f
+        val yr = -1f*100f*7f/8f
+        return floatArrayOf(x*xr + xo, y*yr + yo)
     }
 }

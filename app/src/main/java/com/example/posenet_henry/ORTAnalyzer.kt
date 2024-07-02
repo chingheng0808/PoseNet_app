@@ -21,10 +21,10 @@ internal class ORTAnalyzer(
 ) : ImageAnalysis.Analyzer {
 
     override fun analyze(image: ImageProxy) {
-        // Convert the input image to bitmap and resize to 224x224 for model input
+        // Convert the input image to bitmap and resize to desired size for model input
         val imgBitmap = image.toBitmap()
         // Do rescaling. Filter is set to true: use bilinear interpolation, false: nearest-neighbor
-        val rawBitmap = imgBitmap.let { Bitmap.createScaledBitmap(it, 256, 256, true) }
+        val rawBitmap = imgBitmap.let { Bitmap.createScaledBitmap(it, 384, 1920*384/1080, true) }
         /******** We don't use rotation info from the device sensor ********/
 //        val bitmap = rawBitmap?.rotate(image.imageInfo.rotationDegrees.toFloat())
 //        val bitmap = rawBitmap
@@ -34,7 +34,7 @@ internal class ORTAnalyzer(
 
             val imgData = preProcess(rawBitmap)
             val inputName = ortSession?.inputNames?.iterator()?.next()
-            val shape = longArrayOf(1, 3, 256, 256)
+            val shape = longArrayOf(1, 3, (1920*384/1080), 384)
             val env = OrtEnvironment.getEnvironment()
             env.use {
                 val tensor = OnnxTensor.createTensor(env, imgData, shape)
@@ -46,8 +46,8 @@ internal class ORTAnalyzer(
                         @Suppress("UNCHECKED_CAST")
                         val rawOutput = ((output?.get(0)?.value) as Array<FloatArray>)[0]
 
-                        result.position = floatArrayOf(rawOutput[0], rawOutput[1], rawOutput[2])
-                        result.orientation = floatArrayOf(rawOutput[3], rawOutput[4], rawOutput[5])
+                        result.position = floatArrayOf(rawOutput[2], rawOutput[0], rawOutput[1])
+                        result.orientation = floatArrayOf(rawOutput[5], rawOutput[3], rawOutput[4])
                     }
                 }
             }
