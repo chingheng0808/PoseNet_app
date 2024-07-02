@@ -288,7 +288,7 @@ class MainActivity : AppCompatActivity() {
         val location = adjustPosition(positionRes[0], positionRes[1])
         locX = location[0]
         locY = location[1]
-        Toast.makeText(baseContext,"%.3f, %.3f".format(location[0], location[1]),Toast.LENGTH_SHORT).show()
+//        Toast.makeText(baseContext,"%.3f, %.3f".format(location[0], location[1]),Toast.LENGTH_SHORT).show()
 //        System.out.println(positionRes[0])
         // Update Canvas View
         myDraw.clearPoint()
