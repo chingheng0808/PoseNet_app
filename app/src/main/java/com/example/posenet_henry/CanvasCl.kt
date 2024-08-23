@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.view.View
 
+
 class CanvasCl(context: Context, sl: Int, st: Int, w: Int, h: Int) : View(context) {
     private var extraCanvas: Canvas //Canvas定義了可以在屏幕上繪製的形狀。
     private var extraBitmap: Bitmap //使用畫布繪圖 API繪製緩存位圖
@@ -30,6 +31,20 @@ class CanvasCl(context: Context, sl: Int, st: Int, w: Int, h: Int) : View(contex
         strokeJoin = Paint.Join.ROUND // 指定線條和曲線段如何在描邊路徑上連接 , default: MITER
         strokeCap = Paint.Cap.ROUND // 指定描邊線和路徑的開始和結束方式。 default: BUTT
         strokeWidth = 15f // 以像素為單位指定筆劃的寬度。 default: Hairline-width (really thin)
+    }
+    private val sectorPaint = Paint().apply {
+        color = getColorWithAlpha(Color.GREEN, 0.3f)
+        isAntiAlias = true // 定義是否應用邊緣平滑。
+        isDither = true // 影響精度高於設備的顏色下採樣的方式。
+    }
+    fun getColorWithAlpha(color: Int, ratio: Float): Int {
+        var newColor = 0
+        val alpha = Math.round(Color.alpha(color) * ratio)
+        val r = Color.red(color)
+        val g = Color.green(color)
+        val b = Color.blue(color)
+        newColor = Color.argb(alpha, r, g, b)
+        return newColor
     }
 
     private var currentX = 0f
@@ -105,6 +120,14 @@ class CanvasCl(context: Context, sl: Int, st: Int, w: Int, h: Int) : View(contex
         if (pointsRecord.count() > 4)
             for (i in 0..pointsRecord.count() - 3 step 2)
                 extraCanvas.drawLine(pointsRecord[i], pointsRecord[i + 1], pointsRecord[i + 2], pointsRecord[i + 3], linePaint)
+    }
+
+    fun drawSector(x: Float, y: Float, planeAngle: Float) {
+        val radius = 100f
+        val sweepAngle = 40f
+        val planeAngle = (planeAngle/Math.PI.toFloat())*180f
+        val oval = RectF(x - radius, y - radius, x + radius, y + radius)
+        extraCanvas.drawArc(oval, planeAngle - sweepAngle / 2 + 180f, sweepAngle, true, sectorPaint)
     }
 
     fun drawPoint_(x: Float, y: Float, isTrajectory: Boolean) {

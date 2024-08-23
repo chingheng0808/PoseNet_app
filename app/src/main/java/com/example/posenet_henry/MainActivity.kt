@@ -243,9 +243,9 @@ class MainActivity : AppCompatActivity() {
             binding.percentMeter.progress = (100* result.processTimeMs / 1000).toInt()
 
             if(binding.checkBoxMap.isChecked)
-                updatePoint(result.position, true)
+                updatePoint(result.position, result.orientation, true)
             else
-                updatePoint(result.position, false)
+                updatePoint(result.position, result.orientation, false)
         }
     }
 
@@ -282,7 +282,7 @@ class MainActivity : AppCompatActivity() {
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
     }
 
-    private fun updatePoint(positionRes: FloatArray, isTrajectory: Boolean){
+    private fun updatePoint(positionRes: FloatArray, orientationRes: FloatArray, isTrajectory: Boolean){
         //Test
         // Scalar = pictureSize/realWoldSize
         val location = adjustPosition(positionRes[0], positionRes[1])
@@ -293,6 +293,7 @@ class MainActivity : AppCompatActivity() {
         // Update Canvas View
         myDraw.clearPoint()
         myDraw.drawPoint_(locX, locY, isTrajectory)
+        myDraw.drawSector(locX, locY, orientationRes[0])
 
         val parent = myDraw.parent as ViewGroup
         if(parent != null){
